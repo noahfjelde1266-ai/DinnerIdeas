@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hva skal vi spise?</title>
+<style>
+  :root { color-scheme: dark; --bg:#10131a; --panel:#1b202b; --accent:#ff865e; --muted:#b9c1d0; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:system-ui,-apple-system,Segoe UI,sans-serif; background:linear-gradient(145deg,#10131a,#22283a); color:#f7f8fb; min-height:100vh; }
+  header { padding:24px 18px; text-align:center; border-bottom:1px solid #ffffff1c; }
+  header .logo { font-size:2rem; }
+  h1 { margin:5px 0; font-size:clamp(1.7rem,5vw,2.5rem); }
+  header p,.muted { color:var(--muted); }
+  main { max-width:900px; margin:28px auto; padding:0 16px 40px; }
+  .panel { background:var(--panel); border:1px solid #ffffff17; border-radius:20px; padding:clamp(18px,4vw,30px); box-shadow:0 16px 45px #0002; }
+  .step { display:none; } .step.active { display:block; }
+  label { display:block; margin:18px 0 8px; font-weight:650; }
+  textarea,select,input { width:100%; border:1px solid #424a5b; background:#111620; color:#fff; padding:13px 14px; border-radius:12px; font:inherit; }
+  textarea { min-height:135px; resize:vertical; }
+  .choices { display:grid; grid-template-columns:repeat(auto-fit,minmax(135px,1fr)); gap:10px; }
+  .choice { background:#111620; border:1px solid #424a5b; border-radius:12px; padding:12px; cursor:pointer; }
+  .choice:has(input:checked) { border-color:var(--accent); background:#39251f; }
+  .choice input { width:auto; margin-right:7px; accent-color:var(--accent); }
+  button { border:0; background:var(--accent); color:#24120d; font-weight:750; padding:13px 18px; border-radius:12px; cursor:pointer; font:inherit; }
+  button.secondary { background:#343b4b; color:#fff; }
+  .actions { display:flex; gap:10px; flex-wrap:wrap; justify-content:space-between; margin-top:22px; }
+  .actions .right { margin-left:auto; }
+  .recipes { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; margin-top:18px; }
+  .recipe { background:#111620; border:1px solid #ffffff19; border-radius:16px; overflow:hidden; }
+  .foodpic { display:grid; place-items:center; min-height:110px; font-size:3rem; background:linear-gradient(135deg,#343d51,#252b39); }
+  .recipebody { padding:16px; }
+  .recipe h3 { margin:0 0 8px; }
+  .tag { display:inline-block; font-size:.85rem; color:#ffd5c6; background:#59372d; padding:4px 8px; border-radius:20px; margin:2px 4px 8px 0; }
+  details { margin-top:12px; border-top:1px solid #ffffff1b; padding-top:10px; }
+  li { margin:6px 0; }
+  .notice { background:#282d3a; padding:12px 14px; border-radius:12px; color:var(--muted); font-size:.92rem; }
+  footer { text-align:center; padding:0 16px 24px; color:var(--muted); font-size:.85rem; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo" aria-hidden="true">🍲</div>
+  <h1>Hva skal vi spise?</h1>
+  <p>Fortell hva du har, velg matstil og tid — finn noe godt å lage.</p>
+</header>
+<main>
+  <div class="panel">
+    <section class="step active" id="step1">
+      <h2>1. Hva har du hjemme?</h2>
+      <p class="muted">Skriv ingrediensene du har, for eksempel kylling, pasta, ost og tomater.</p>
+      <label for="ingredients">Ingredienser</label>
+      <textarea id="ingredients" placeholder="For eksempel: pasta, ost, tomater, løk, kylling"></textarea>
+      <div class="actions"><span></span><button class="right" id="toStep2">Fortsett →</button></div>
+    </section>
+
+    <section class="step" id="step2">
+      <h2>2. Hva har du lyst på?</h2>
+      <label>Velg type mat</label>
+      <div class="choices" id="cuisines">
+        <label class="choice"><input type="radio" name="cuisine" value="Italiensk" checked> 🇮🇹 Italiensk</label>
+        <label class="choice"><input type="radio" name="cuisine" value="Meksikansk"> 🇲🇽 Meksikansk</label>
+        <label class="choice"><input type="radio" name="cuisine" value="Amerikansk"> 🇺🇸 Amerikansk</label>
+        <label class="choice"><input type="radio" name="cuisine" value="Norsk"> 🇳🇴 Norsk</label>
+        <label class="choice"><input type="radio" name="cuisine" value="Kinesisk"> 🇨🇳 Kinesisk-inspirert</label>
+        <label class="choice"><input type="radio" name="cuisine" value="Alle"> 🎲 Spiller ingen rolle</label>
+      </div>
+      <label for="time">Hvor mye tid har du?</label>
+      <select id="time">
+        <option value="15">⚡ Raskt — maks. 15 minutter</option>
+        <option value="30" selected>🕒 15–30 minutter</option>
+        <option value="60">🍳 30–60 minutter</option>
+        <option value="999">👨‍🍳 Jeg har god tid</option>
+      </select>
+      <div class="actions"><button class="secondary" id="back1">← Tilbake</button><button id="findRecipes" class="right">Finn oppskrifter →</button></div>
+    </section>
+
+    <section class="step" id="step3">
+      <h2>3. Dette kan du lage 🍽️</h2>
+      <p id="summary" class="muted"></p>
+      <div id="recipeResults" class="recipes"></div>
+      <p id="noResults" class="notice" hidden>Jeg fant ingen forslag som passer til både matstil og tidsvalg i denne lille demoen. Prøv «Spiller ingen rolle» eller velg mer tid.</p>
+      <div class="actions"><button class="secondary" id="back2">← Endre valg</button><button id="startOver" class="right">Start på nytt</button></div>
+      <p class="notice">Dette er en første versjon med noen eksempeloppskrifter. Den vurderer ingrediensord du skriver inn, men er ikke koblet til en oppskriftsdatabase ennå.</p>
+    </section>
+  </div>
+</main>
+<footer>Laget som en første prototype • Oppskriftene er forslag — sjekk alltid allergier og at maten er gjennomstekt.</footer>
+<script>
+const recipes = [
+ {name:"Kremet tomatpasta",emoji:"🍝",cuisine:"Italiensk",minutes:20,ingredients:["pasta","tomat","fløte","ost","løk"],items:["Pasta","Tomater eller tomatsaus","Litt fløte (valgfritt)","Ost","Salt og pepper"],steps:["Kok pasta etter anvisningen på pakken.","Varm tomater i en panne med litt olje og eventuelt hakket løk.","Rør inn litt fløte hvis du har, og smak til.","Bland sausen med pastaen og topp med ost."]},
+ {name:"Ostete quesadilla",emoji:"🫓",cuisine:"Meksikansk",minutes:12,ingredients:["ost","tortilla","bønner","mais","kylling"],items:["Tortillalefser","Revet ost","Eventuelt bønner, mais eller ferdig stekt kylling"],steps:["Legg ost og eventuelt annet fyll på halve tortillalefsen.","Brett sammen og stek i tørr panne på middels varme.","Snu forsiktig og stek til osten har smeltet og lefsen er gyllen.","Skjær i trekanter og server."]},
+ {name:"Kylling- og pastapanne",emoji:"🍗",cuisine:"Italiensk",minutes:30,ingredients:["kylling","pasta","fløte","ost","tomat"],items:["Kylling","Pasta","Fløte eller litt pastavann","Tomater eller grønnsaker du har"],steps:["Kok pastaen.","Skjær kyllingen i små biter og stek den helt gjennom i en panne.","Ha i tomater og eventuelt litt fløte.","Vend inn pastaen og smak til. Pass på at kyllingen er gjennomstekt."]},
+ {name:"Amerikansk ostesmørbrød",emoji:"🥪",cuisine:"Amerikansk",minutes:10,ingredients:["brød","ost","smør"],items:["Brødskiver","Ost","Litt smør"],steps:["Legg ost mellom to brødskiver.","Smør litt smør på utsiden.","Stek på middels varme til brødet er gyllent og osten har smeltet."]},
+ {name:"Norsk potet- og eggepanne",emoji:"🥔",cuisine:"Norsk",minutes:25,ingredients:["potet","egg","løk","ost"],items:["Kokte poteter","Egg","Løk hvis du har","Salt og pepper"],steps:["Skjær potetene i skiver og stek dem i litt olje.","Ha i løk hvis du har, og stek til den mykner.","Visp egg, hell over og stek forsiktig til egget har stivnet."]},
+ {name:"Stekt ris med egg",emoji:"🍚",cuisine:"Kinesisk",minutes:15,ingredients:["ris","egg","gulrot","mais","erter"],items:["Kokt, avkjølt ris","Egg","Grønnsaker du har","Litt olje og soyasaus hvis tilgjengelig"],steps:["Varm litt olje i en panne og stek grønnsakene.","Skyv dem til siden og rør inn egg til det stivner.","Ha i risen og stek til alt er varmt.","Smak til med soyasaus hvis du har."]},
+ {name:"Tomat- og ostetoast",emoji:"🍞",cuisine:"Alle",minutes:10,ingredients:["brød","ost","tomat"],items:["Brød","Ost","Tomat"],steps:["Legg tomatskiver og ost på brødet.","Stek i ovn eller toastjern til osten smelter.","La den avkjøles litt før du spiser."]},
+ {name:"Enkel grønnsakssuppe",emoji:"🥣",cuisine:"Norsk",minutes:30,ingredients:["gulrot","potet","løk","buljong"],items:["Grønnsaker du har, for eksempel gulrot og potet","Vann","Buljong hvis du har"],steps:["Skrell og skjær grønnsakene i små biter.","Kok dem i vann med buljong til de er myke.","Smak til og mos litt hvis du ønsker en tykkere suppe."]}
+];
+function showStep(n) {
+ document.querySelectorAll(".step").forEach((el,i)=>el.classList.toggle("active",i===n-1));
+ window.scrollTo({top:0,behavior:"smooth"});
+}
+document.getElementById("toStep2").addEventListener("click",()=>{
+ const val=document.getElementById("ingredients").value.trim();
+ if(!val){document.getElementById("ingredients").focus();return;}
+ showStep(2);
+});
+document.getElementById("back1").addEventListener("click",()=>showStep(1));
+document.getElementById("back2").addEventListener("click",()=>showStep(2));
+document.getElementById("startOver").addEventListener("click",()=>{showStep(1);});
+document.getElementById("findRecipes").addEventListener("click",()=>{
+ const ingredients=document.getElementById("ingredients").value.toLowerCase().split(/[,;\n]+/).map(x=>x.trim()).filter(Boolean);
+ const cuisine=document.querySelector('input[name="cuisine"]:checked').value;
+ const maxTime=Number(document.getElementById("time").value);
+ let list=recipes.filter(r=>(cuisine==="Alle"||r.cuisine===cuisine||r.cuisine==="Alle")&&r.minutes<=maxTime);
+ // Rank recipes by ingredient matches; keep a few suggestions so the demo is useful.
+ list=list.map(r=>({...r,score:r.ingredients.filter(k=>ingredients.some(i=>i.includes(k)||k.includes(i))).length}))
+   .sort((a,b)=>b.score-a.score||a.minutes-b.minutes).slice(0,4);
+ document.getElementById("summary").textContent=`Du valgte ${cuisine.toLowerCase()} mat og ${maxTime===999?"god tid":`maks. ${maxTime} minutter`}. Forslagene rangeres etter ingredienser som ligner på det du skrev.`;
+ const results=document.getElementById("recipeResults");
+ results.replaceChildren();
+ document.getElementById("noResults").hidden=list.length>0;
+ list.forEach((r,index)=>{
+   const card=document.createElement("article"); card.className="recipe";
+   const pic=document.createElement("div");pic.className="foodpic";pic.textContent=r.emoji;pic.setAttribute("aria-hidden","true");
+   const body=document.createElement("div");body.className="recipebody";
+   const title=document.createElement("h3");title.textContent=r.name;
+   const tags=document.createElement("div");
+   [`⏱️ ${r.minutes} min`,r.cuisine,`Match: ${r.score} ingrediensord`].forEach(t=>{const s=document.createElement("span");s.className="tag";s.textContent=t;tags.appendChild(s);});
+   const details=document.createElement("details");const summary=document.createElement("summary");summary.textContent="Se ingredienser og framgangsmåte";details.appendChild(summary);
+   const ih=document.createElement("h4");ih.textContent="Ingredienser";details.appendChild(ih);
+   const ul=document.createElement("ul");r.items.forEach(item=>{const li=document.createElement("li");li.textContent=item;ul.appendChild(li);});details.appendChild(ul);
+   const sh=document.createElement("h4");sh.textContent="Slik gjør du";details.appendChild(sh);
+   const ol=document.createElement("ol");r.steps.forEach(step=>{const li=document.createElement("li");li.textContent=step;ol.appendChild(li);});details.appendChild(ol);
+   body.append(title,tags,details);card.append(pic,body);results.appendChild(card);
+ });
+ showStep(3);
+});
+</script>
+</body>
+</html>
